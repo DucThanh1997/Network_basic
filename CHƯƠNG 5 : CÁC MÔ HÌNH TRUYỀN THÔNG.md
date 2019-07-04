@@ -21,9 +21,9 @@ với yêu cầu chuyển chúng đi.
 Theo mô hình OSI chương trình truyền thông được chia ra thành 7 tầng với những chức năng phân biệt cho từng tầng.
 Hai tầng đồng mức khi liên kết với nhau phải sử dụng một giao thức chung. 
 Trong mô hình OSI có hai loại giao thức chính được áp dụng: 
-  + Giao thức có liên kết (connection – oriented) : trước khi truyền dữ liệu hai tầng đồng mức cần thiết lập một liên kết logic 
+  + **Giao thức có liên kết (connection – oriented)** : trước khi truyền dữ liệu hai tầng đồng mức cần thiết lập một liên kết logic 
   và các gói tin được trao đổi thông qua liên kết náy, việc có liên kết logic sẽ nâng cao độ an toàn trong truyền dữ liệu.
-  + Giao thức không liên kết (connectionless): trước khi truyền dữ liệu không thiết lập liên kết logic 
+  + **Giao thức không liên kết (connectionless)**: trước khi truyền dữ liệu không thiết lập liên kết logic 
   và mỗi gói tin được truyền độc lập với các gói tin trước hoặc sau nó.
   
 ![image](https://user-images.githubusercontent.com/45547213/60646777-62072900-9e66-11e9-8e9a-18d40bb9c006.png)
