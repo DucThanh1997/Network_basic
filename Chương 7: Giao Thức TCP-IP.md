@@ -91,12 +91,70 @@ Cuối cùng khi một datagram nhận bởi một thực thể IP ở trạm đ
 3) Chuyển dữ liệu và các tham số điều khiển lên tầng trên.
 
 
+# Giao thức TCP
+## Tổng quát
+- TCP là một giao thức “có liên kết” (connection – oriented) khác với IP (connectionless), nghĩa là cần phải thiết lập liên kết giữa hai thực thể TCP trước khi chúng trao đổi dữ liệu với nhau.
+- Một cổng TCP kết hợp với địa chỉ IP tạo thành một đầu nối TCP/IP (socket) duy nhất trong liên mạng.
+- Dịch vụ TCP được cung cấp nhờ một liên kết logic giữa hai đầu nối TCP/IP với nhau. Ngoài ra, 1 đầu nối TCP/IP có thể tham gia nhiều liên kết với các đầu nối TCP/IP ở xa khác nhau. 
 
+## Các bước để thực hiện 1 liên kết TCP/IP
+- Trước khi truyền dữ liệu giữa 2 trạm cần phải thiết lập một liên kết TCP giữa chúng và khi không còn nhu cầu truyền dữ liệu thì liên kết đó sẽ được giải phóng.
+- Có 2 phương thức chủ động và bị động
+  + bị động: người dùng yêu cầu TCP đợi 1 liên kết từ nơi khác đến
+  + chủ động: yêu cầu TCP mở liên kết với 1 đầu nối TCP/IP ở nơi khác, liên kết thành công nếu ở đầu kia có 1 phương thức bị động đợi sẵn 
 
+## Các bước để thực hiện để truyền và nhận dữ liệu
+- Hàm Send: Dữ liệu được gửi xuống TCP theo các khối (block). Khi nhận được một khối dữ liệu, TCP sẽ lưu trữ trong bộ đệm (buffer). Nếu cờ PUSH được dựng thì toàn bộ dữ liệu trong bộ đệm được gửi, kể cả khối dữ liệu mới đến sẽ được gửi đi. Ngược lại cờ PUSH không được dựng thì dữ liệu được giữ lại trong bộ đệm và sẽ gửi đi khi có cơ hội thích hợp (chẳng hạn chờ thêm dữ liệu nữa để gữi đi với hiệu quả hơn).
 
+- Hàm reveive: Ở trạm đích dữ liệu sẽ được TCP lưu trong bộ đệm gắn với mỗi liên kết. Nếu dữ liệu được đánh dấu với một cờ PUSH thì toàn bộ dữ liệu trong bộ đệm (kể cả các dữ liệu được lưu từ trước) sẽ được chuyển lên cho người sữ dụng. Còn nếu dữ liệu đến không được đánh dấu với cờ PUSH thì TCP chờ tới khi thích hợp mới chuyển dữ liệu với mục tiêu tăng hiệu quả hệ thống.
 
+Nói chung việc nhận và giao dữ liệu cho người sử dụng đích của TCP phụ thuộc vào việc cài đặt cụ thể. Trường hợp cần chuyển gấp dữ liệu cho người sử dụng thì có thể dùng cờ URGENT và đánh dấu dữ liệu bằng bit URG để báo cho người sử dụng cần phải sử lý khẩn cấp dữ liệu đó.
 
+## Các bước thực hiện khi đóng một liên kết
+- Hàm Close: yêu cầu đóng liên kết một cách bình thường. Có nghĩa là việc truyền dữ liệu trên liên kết đó đã hoàn tất. Khi nhận được một hàm Close TCP sẽ truyền đi tất cả dữ liệu còn trong bộ đệm thông báo rằng nó đóng liên kết. Lưu ý rằng khi một người sử dụng đã gửi đi một hàm Close thì nó vẫn phải tiếp tục nhận dữ liệu đến trên liên kết đó cho đến khi TCP đã báo cho phía bên kia biết về việc đóng liên kết và chuyển giao hết tất cả dữ liệu cho người sử dụng của mình.
 
+- Hàm Abort: Người sử dụng có thể đóng một liên kết bất và sẽ không chấp nhận dữ liệu qua liên kết đó nữa. Do vậy dữ liệu có thể bị mất đi khi đang được truyền đi. TCP báo cho TCP ở xa biết rằng liên kết đã được hủy bỏ và TCP ở xa sẽ thông báo cho người sử dụng cũa mình.
+
+## Cấu trúc của đơn vị dữ liệu
+![image](https://user-images.githubusercontent.com/45547213/60948469-29ab9300-a31d-11e9-81ac-330ea6743ac5.png)
+
+Source Por (16 bits): Số hiệu cổng TCP của trạm nguồn.
+
+Destination Port (16 bit): Số hiệu cổng TCP của trạm đích.
+
+Sequence Number (32 bit): số hiệu của byte đầu tiên của segment trừ khi bit SYN được thiết lập. Nếy bit SYN được thiết lập thì Sequence Number là số hiệu tuần tự khởi đầu (ISN) và byte dữ liệu đầu tiên là ISN+1.
+
+Acknowledgment Number (32 bit): số hiệu của segment tiếp theo mà trạm nguồn đang chờ để nhận. Ngầm ý báo nhận tốt (các) segment mà trạm đích đã gửi cho trạm nguồn.
+
+Data offset (4 bit): số lượng bội của 32 bit (32 bit words) trong TCP header (tham số này chỉ ra vị trí bắt đầu của nguồn dữ liệu).
+
+Reserved (6 bit): dành để dùng trong tương lai
+
+Control bit (các bit điều khiển):
+
+URG: Vùng con trỏ khẩn (Ucgent Poiter) có hiệu lực.
+
+ACK: Vùng báo nhận (ACK number) có hiệu lực.
+
+PSH: Chức năng PUSH.
+
+RST: Khởi động lại (reset) liên kết.
+
+SYN: Đồng bộ hóa số hiệu tuần tự (sequence number).
+
+FIN: Không còn dữ liệu từ trạm nguồn.
+
+Window (16 bit): cấp phát credit để kiểm soát nguồn dữ liệu (cơ chế cửa sổ). Đây chính là số lượng các byte dữ liệu, bắt đầu từ byte được chỉ ra trong vùng ACK number, mà trạm nguồn đã sẵn sàng để nhận.
+
+Checksum (16 bit): mã kiểm soát lỗi cho toàn bộ segment (header + data)
+
+Urgemt Poiter (16 bit): con trỏ này trỏ tới số hiệu tuần tự của byte đi theo sau dữ liệu khẩn. Vùng này chỉ có hiệu lực khi bit URG được thiết lập.
+
+Options (độ dài thay đổi): khai báo các option của TCP, trong đó có độ dài tối đa của vùng TCP data trong một segment.
+
+Paddinh (độ dài thay đổi): phần chèn thêm vào header để đảm bảo phần header luôn kết thúc ở một mốc 32 bit. Phần thêm này gồm toàn số 0.
+
+TCP data (độ dài thay đổi): chứa dữ liệu của tầng trên, có độ dài tối đa ngầm định là 536 byte. Giá trị này có thể điều chỉnh bằng cách khai báo trong vùng options.
 
 
 
